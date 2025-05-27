@@ -1,13 +1,47 @@
-{
-  "name": "realtime-weather-api",
-  "version": "1.0.0",
-  "description": "A simple real-time API for temperature and humidity",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
-  }
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+
+// Hàm giả lập dữ liệu
+function generateData() {
+  const now = new Date();
+  const temperature = (30 + Math.random() * 5).toFixed(1);  // 30-35°C
+  const humidity = (40 + Math.random() * 20).toFixed(2);   // 40-60%
+  const counts = Math.floor(20 + Math.random() * 20);      // 20-40
+  const cps = (counts / 47).toFixed(2);                    // giả định thời gian đo 47s
+  const uSv = (counts * 0.0098).toFixed(3);                // hệ số giả định
+  const timestamp = Math.floor(now.getTime() / 1000);      // UNIX timestamp
+  const localTime = now.toLocaleString('en-GB', {
+    hour12: false,
+    timeZone: 'Asia/Ho_Chi_Minh'
+  }).replace(',', '');
+
+  return {
+    counts: counts,
+    cps: parseFloat(cps),
+    humidity: parseFloat(humidity),
+    localTime: localTime,
+    stationName: "ReWes-I89",
+    temperature: parseFloat(temperature),
+    timestamp: timestamp,
+    uSv: parseFloat(uSv)
+  };
 }
+
+let cachedData = generateData();
+
+// Cập nhật dữ liệu mỗi 5 giây
+setInterval(() => {
+  cachedData = generateData();
+}, 5000);
+
+app.get('/data', (req, res) => {
+  res.json(cachedData);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
